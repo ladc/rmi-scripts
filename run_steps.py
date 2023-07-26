@@ -58,9 +58,11 @@ dir_motion = dir_cascade
 dir_skill = os.path.join(dir_base,'skill')
 dir_gif = os.path.join(dir_base,'gifs')
 dir_nwc = os.path.join(dir_base,'nwc')
-if not os.path.exists(dir_nwc):
-    os.makedirs(dir_nwc)
 
+os.makedirs(dir_skill, exist_ok=True)
+os.makedirs(dir_gif, exist_ok=True)
+os.makedirs(dir_nwc, exist_ok=True)
+/
 print("Started nowcast with:")
 print(r' Startdate: %s' % startdate.strftime("%Y-%m-%d %H:%M"))
 print(r' Forecast length: %i timesteps' % fc_length)
