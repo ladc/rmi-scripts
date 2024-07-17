@@ -15,23 +15,20 @@ YYYYMMDDHHMM : startdate of the forecast (also used in .nc filename)
 FC           : forecast length (number of timesteps)
 NENS         : number of ensemble members
 CPUS         : number of workers
-CASESTYPE    : the type of case (flooding/no-radar-rain-no-nwp-rain/no-radar-rain-nwp-rain)
-eg.: run_steps.py 202101270600 72 10 4 flooding
+eg.: run_steps.py 202107041600 20 12 4
 """
 
 import os
 import datetime
-import netCDF4
 import numpy as np
-import pprint
-import sys
-import time
 import matplotlib.pyplot as plt
-import imageio
+import pysteps
+import sys
 
 arg_list = sys.argv
 if len(arg_list) < 2:
     print("Usage: run_steps.py YYYYMMDDHHMM FC NENS CPUS CASESTYPE")
+    print("e.g. \n run_steps.py 202107041600 12 2 4")
     sys.exit(1)
 
 import dask
@@ -39,30 +36,48 @@ import pysteps
 
 # 1. Load the command line arguments
 
+
+# Length of the forecast in timesteps (12 timesteps of 5 minutes each = 1 hour forecast)
+fc_length = 12
+# Number of ensemble members
+nens = 2
+# Number of workers
+ncores = 4
+
 startdate = datetime.datetime.strptime(arg_list[1],"%Y%m%d%H%M")
 fc_length = int(arg_list[2])
 nens = int(arg_list[3])
 ncores = int(arg_list[4])
-casetype = arg_list[5]
-#startdate = datetime.datetime.strptime('202101270200','%Y%m%d%H%M')
-#nens=5
-#fc_length=72
-#ncores = 10
 
-threshold = 0.1
-ncascade = 8
+# Default parameters
+# Rain/No-rain threshold
+threshold = 0.1 
+# Number of cascade levels
+ncascade = 6
 
-dir_base = "/home/michielv/pysteps/hackaton/" # change me
-dir_cascade = os.path.join(dir_base,f'nwp/{casetype}',startdate.strftime('%Y%m%d'))
+# Directories
+dir_base = ".." # change me - this is the dir that contains the hackathon_testdata directory and where the output will be written
+dir_cascade = os.path.join(dir_base,f'hackathon_testdata/nwp/',startdate.strftime('%Y%m%d'))
 dir_motion = dir_cascade
 dir_skill = os.path.join(dir_base,'skill')
 dir_gif = os.path.join(dir_base,'gifs')
 dir_nwc = os.path.join(dir_base,'nwc')
 
-os.makedirs(dir_skill, exist_ok=True)
-os.makedirs(dir_gif, exist_ok=True)
-os.makedirs(dir_nwc, exist_ok=True)
-/
+os.makedirs(dir_skill,exist_ok=True)
+os.makedirs(dir_nwc,exist_ok=True)
+os.makedirs(dir_gif,exist_ok=True)
+
+# Hard-coding some paths here to avoid potential pystepsrc issues.
+data_src_radar = "rmi"
+root_path = os.path.join(dir_base,'hackathon_testdata/radar') # pysteps.rcparams.data_sources[data_src_radar]["root_path"]
+path_fmt = f'%Y%m%d' #pysteps.rcparams.data_sources[data_src_radar]["path_fmt"]
+# BEWARE! This is not fixed in time. More recent radqpe files may have a different filename pattern.
+fn_pattern = '%Y%m%d%H%M%S.rad.best.comp.rate.qpe' #pysteps.rcparams.data_sources[data_src_radar]["fn_pattern"]
+fn_ext = 'hdf' #pysteps.rcparams.data_sources[data_src_radar]["fn_ext"]
+importer_name = pysteps.rcparams.data_sources[data_src_radar]["importer"]
+importer_kwargs = pysteps.rcparams.data_sources[data_src_radar]["importer_kwargs"]
+timestep = pysteps.rcparams.data_sources[data_src_radar]["timestep"]
+
 print("Started nowcast with:")
 print(r' Startdate: %s' % startdate.strftime("%Y-%m-%d %H:%M"))
 print(r' Forecast length: %i timesteps' % fc_length)
@@ -75,18 +90,12 @@ print(r' Cascade decompositions are loaded from: %s' % dir_cascade)
 print(r' NWP skill is saved in: %s' % dir_skill)
 print(r' Nowcast netCDF file is saved in: %s' % dir_nwc)
 print('')
-# 2. Set the directories and data sources
-data_src_radar = "rmi"
-data_src_nwp = "rmi_nwp"
 
-# 3. Load the radar analyses 
-root_path = os.path.join(dir_base,'radar') #pysteps.rcparams.data_sources[data_src_radar]["root_path"]
-path_fmt = f'{casetype}/%Y%m%d' #pysteps.rcparams.data_sources[data_src_radar]["path_fmt"]
-fn_pattern = '%Y%m%d%H%M%S.rad.bhbjbwdnfa.comp.rate.qpe2' #pysteps.rcparams.data_sources[data_src_radar]["fn_pattern"]
-fn_ext = 'hdf' #pysteps.rcparams.data_sources[data_src_radar]["fn_ext"]
-importer_name = pysteps.rcparams.data_sources[data_src_radar]["importer"]
-importer_kwargs = pysteps.rcparams.data_sources[data_src_radar]["importer_kwargs"]
-timestep = pysteps.rcparams.data_sources[data_src_radar]["timestep"]
+
+# Load and preprocess the radar data
+
+# In[15]:
+
 
 print('Loading and preprocessing radar analysis...')
 fn_radar = pysteps.io.find_by_date(
@@ -99,6 +108,7 @@ fn_radar = pysteps.io.find_by_date(
         num_prev_files = 2
 )
 
+# Reading the radar hdf5 files with the appropriate importer
 importer_radar = pysteps.io.get_method(importer_name,"importer")
 r_radar, _, metadata_radar = pysteps.io.read_timeseries(
         inputfns = fn_radar,
@@ -116,6 +126,9 @@ r_radar, metadata_radar = converter(r_radar,metadata_radar)
 r_radar[r_radar < threshold] = 0.0
 metadata_radar["threshold"] = threshold
 
+r_obs = r_radar[-1,:,:].copy()
+metadata_obs = metadata_radar.copy()
+
 transformer = pysteps.utils.get_method("dB")
 r_radar, metadata_radar = transformer(
         R = r_radar,
@@ -124,11 +137,17 @@ r_radar, metadata_radar = transformer(
 #        zerovalue=-10.0
 )
 
+# Determine optical flow field with Lukas-Kanade
 oflow_method = pysteps.motion.get_method("LK")
 v_radar = oflow_method(r_radar)
 print('done!')
-print('')
-# 5. Get the available NWP dates, select the closest one and load the velocities and cascade
+
+
+# Get the available NWP dates, select the closest one and load the velocities and cascade
+
+# In[16]:
+
+
 fcsttimes_nwp = []
 for file in os.listdir(dir_motion):
     fcsttimes_nwp.append(
@@ -160,7 +179,13 @@ r_decomposed_nwp, v_nwp = pysteps.blending.utils.load_NWP(
 r_decomposed_nwp = np.stack([r_decomposed_nwp])
 v_nwp = np.stack([v_nwp])
 print('done!')
-# 6. Prepare the netCDF exporter-function
+
+
+# Prepare the netCDF exporter-function
+
+# In[17]:
+
+
 def write_netCDF(R):
     R, _ = converter(R, metadata_radar)
     pysteps.io.export_forecast_dataset(R, exporter)
@@ -177,7 +202,12 @@ exporter = pysteps.io.initialize_forecast_exporter_netcdf(
         incremental = 'timestep'
 )
 
-# 6. Start the nowcast
+
+# Start the nowcast
+
+# In[23]:
+
+
 nwc_method = pysteps.blending.get_method("steps")
 r_nwc = nwc_method(
         precip = r_radar,
@@ -226,8 +256,9 @@ r_nwc, metadata_nwc = transformer(
 )
 
 pysteps.io.close_forecast_files(exporter)
+print("nowcast done!")
 
-
+exit()
 # 7. Build GIF
 
 filenames = []
@@ -260,7 +291,7 @@ with imageio.get_writer(os.path.join(dir_gif,
         writer.append_data(image)
 
 # remove files
-for filename in set(filenames):
-    os.remove(filename)
+#for filename in set(filenames):
+#    os.remove(filename)
 
 
