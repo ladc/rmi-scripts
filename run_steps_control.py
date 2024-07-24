@@ -94,9 +94,6 @@ print('')
 
 # Load and preprocess the radar data
 
-# In[15]:
-
-
 print('Loading and preprocessing radar analysis...')
 fn_radar = pysteps.io.find_by_date(
         date = startdate,
@@ -145,9 +142,6 @@ print('done!')
 
 # Get the available NWP dates, select the closest one and load the velocities and cascade
 
-# In[16]:
-
-
 fcsttimes_nwp = []
 for file in os.listdir(dir_motion):
     fcsttimes_nwp.append(
@@ -183,9 +177,6 @@ print('done!')
 
 # Prepare the netCDF exporter-function
 
-# In[17]:
-
-
 def write_netCDF(R):
     R, _ = converter(R, metadata_radar)
     pysteps.io.export_forecast_dataset(R, exporter)
@@ -204,9 +195,6 @@ exporter = pysteps.io.initialize_forecast_exporter_netcdf(
 
 
 # Start the nowcast
-
-# In[23]:
-
 
 nwc_method = pysteps.blending.get_method("steps")
 r_nwc = nwc_method(
@@ -257,41 +245,3 @@ r_nwc, metadata_nwc = transformer(
 
 pysteps.io.close_forecast_files(exporter)
 print("nowcast done!")
-
-exit()
-# 7. Build GIF
-
-filenames = []
-for i in range(r_nwc.shape[1]):
-    title = 'Precipitation nowcast %s + %i min\nvaliddate: %s' % (startdate.strftime("%Y-%m-%d %H:%M"), (i+1)*timestep, startdate+datetime.timedelta(minutes=(i+1)*5))
-#    datestr = datetime.datetime.strftime(fns[1][i],"%Y-%m-%d %H:%M UTC")
-    plt.figure(figsize = (16,12))
-    for j in range(r_nwc.shape[0]):
-        plt.subplot(231+j)
-        pysteps.visualization.plot_precip_field(
-            r_nwc[j,i,:,:],
-            geodata = metadata_radar,
-            title = r'Member %i' % j
-        )
-    plt.suptitle(title)
-    plt.tight_layout()
-    filename = f'{i}.png'
-    filenames.append(filename)
-    plt.savefig(filename,dpi=72)
-    plt.close()
-
-
-# build gif
-kargs = { 'duration' : 0.4 }
-with imageio.get_writer(os.path.join(dir_gif,
-    r'forecast_%s_nwp_%s.gif' % (startdate.strftime('%Y%m%d%H%M'),
-    date_nwp.strftime('%Y%m%d%H%M'))), mode='I', **kargs) as writer:
-    for filename in filenames:
-        image = imageio.imread(filename)
-        writer.append_data(image)
-
-# remove files
-#for filename in set(filenames):
-#    os.remove(filename)
-
-

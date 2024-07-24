@@ -27,8 +27,8 @@ import sys
 
 arg_list = sys.argv
 if len(arg_list) < 2:
-    print("Usage: run_steps.py YYYYMMDDHHMM FC NENS CPUS CASESTYPE")
-    print("e.g. \n run_steps.py 202107041600 12 2 4")
+    print("Usage: run_steps_control.py YYYYMMDDHHMM FC NENS CPUS CASESTYPE")
+    print("e.g. \n run_steps_control.py 202107041600 12 1 1")
     sys.exit(1)
 
 import dask
@@ -249,6 +249,7 @@ r_nwc = nwc_method(
         measure_time = False
 )
 
+
 r_nwc, metadata_nwc = transformer(
         R = r_nwc,
         threshold = -10,
@@ -257,41 +258,4 @@ r_nwc, metadata_nwc = transformer(
 
 pysteps.io.close_forecast_files(exporter)
 print("nowcast done!")
-
-exit()
-# 7. Build GIF
-
-filenames = []
-for i in range(r_nwc.shape[1]):
-    title = 'Precipitation nowcast %s + %i min\nvaliddate: %s' % (startdate.strftime("%Y-%m-%d %H:%M"), (i+1)*timestep, startdate+datetime.timedelta(minutes=(i+1)*5))
-#    datestr = datetime.datetime.strftime(fns[1][i],"%Y-%m-%d %H:%M UTC")
-    plt.figure(figsize = (16,12))
-    for j in range(r_nwc.shape[0]):
-        plt.subplot(231+j)
-        pysteps.visualization.plot_precip_field(
-            r_nwc[j,i,:,:],
-            geodata = metadata_radar,
-            title = r'Member %i' % j
-        )
-    plt.suptitle(title)
-    plt.tight_layout()
-    filename = f'{i}.png'
-    filenames.append(filename)
-    plt.savefig(filename,dpi=72)
-    plt.close()
-
-
-# build gif
-kargs = { 'duration' : 0.4 }
-with imageio.get_writer(os.path.join(dir_gif,
-    r'forecast_%s_nwp_%s.gif' % (startdate.strftime('%Y%m%d%H%M'),
-    date_nwp.strftime('%Y%m%d%H%M'))), mode='I', **kargs) as writer:
-    for filename in filenames:
-        image = imageio.imread(filename)
-        writer.append_data(image)
-
-# remove files
-#for filename in set(filenames):
-#    os.remove(filename)
-
 
