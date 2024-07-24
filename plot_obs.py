@@ -62,7 +62,7 @@ print(metadata)
 def plot_radar(radar,metadata,figdir='./',geometries=None,dpi=72,height=1085,width=1029):
     '''
     Plotting:
-        Plots all timesteps of an ensemble member, reusing the fig and ax for eacht timestep
+        Plots a timeseries of rainfall fields, reusing the fig and ax for eacht timestep
         to increase speed.
     Inputs:
         radar:      radar data array
@@ -153,7 +153,7 @@ def plot_radar(radar,metadata,figdir='./',geometries=None,dpi=72,height=1085,wid
         suptitle = "%s " %  (
             timestamp.strftime("%a %d %b %Y %H:%M:%S"),
             )
-        title = "%sZ nowcast" % (metadata['timestamps'][timestep].strftime('%H:%M'), )
+        title = "%sZ observation" % (metadata['timestamps'][timestep].strftime('%H:%M'), )
         ax_title.set_text(title)
         ax_suptitle.set_text(suptitle)
         ax.set_axis_off()
