@@ -27,8 +27,8 @@ import sys
 
 arg_list = sys.argv
 if len(arg_list) < 2:
-    print("Usage: run_steps.py YYYYMMDDHHMM FC NENS CPUS CASESTYPE")
-    print("e.g. \n run_steps.py 202107041600 12 2 4")
+    print("Usage: run_steps_control.py YYYYMMDDHHMM FC NENS CPUS CASESTYPE")
+    print("e.g. \n run_steps_control.py 202107041600 12 1 1")
     sys.exit(1)
 
 import dask
@@ -40,9 +40,9 @@ import pysteps
 # Length of the forecast in timesteps (12 timesteps of 5 minutes each = 1 hour forecast)
 fc_length = 12
 # Number of ensemble members
-nens = 2
+nens = 1
 # Number of workers
-ncores = 4
+ncores = 1
 
 startdate = datetime.datetime.strptime(arg_list[1],"%Y%m%d%H%M")
 fc_length = int(arg_list[2])
