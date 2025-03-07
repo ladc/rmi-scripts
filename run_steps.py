@@ -36,14 +36,6 @@ import pysteps
 
 # 1. Load the command line arguments
 
-
-# Length of the forecast in timesteps (12 timesteps of 5 minutes each = 1 hour forecast)
-fc_length = 12
-# Number of ensemble members
-nens = 2
-# Number of workers
-ncores = 4
-
 startdate = datetime.datetime.strptime(arg_list[1],"%Y%m%d%H%M")
 fc_length = int(arg_list[2])
 nens = int(arg_list[3])
@@ -145,8 +137,6 @@ print('done!')
 
 # Get the available NWP dates, select the closest one and load the velocities and cascade
 
-# In[16]:
-
 
 fcsttimes_nwp = []
 for file in os.listdir(dir_motion):
@@ -183,9 +173,6 @@ print('done!')
 
 # Prepare the netCDF exporter-function
 
-# In[17]:
-
-
 def write_netCDF(R):
     R, _ = converter(R, metadata_radar)
     pysteps.io.export_forecast_dataset(R, exporter)
@@ -204,9 +191,6 @@ exporter = pysteps.io.initialize_forecast_exporter_netcdf(
 
 
 # Start the nowcast
-
-# In[23]:
-
 
 nwc_method = pysteps.blending.get_method("steps")
 r_nwc = nwc_method(
@@ -233,6 +217,7 @@ r_nwc = nwc_method(
         conditional = False,
         probmatching_method = 'cdf',
         mask_method = 'incremental',
+        smooth_radar_mask_range = 50,
         callback = write_netCDF,
         return_output = True,
         seed = 24,
