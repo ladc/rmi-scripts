@@ -29,6 +29,8 @@ if len(arg_list) < 1:
 import pysteps
 from pysteps.io import import_netcdf_pysteps
 
+control = False
+
 # 1. Load the command line arguments
 startdate = datetime.datetime.strptime(arg_list[1], "%Y%m%d%H%M")
 threshold = 0.1
@@ -36,7 +38,8 @@ ncascade = 6
 
 dir_base = ".."  # change me
 dir_nwc = os.path.join(dir_base, "nwc")
-dir_nwc_control = os.path.join(dir_base, "nwc_control")
+if control:
+    dir_nwc_control = os.path.join(dir_base, "nwc_control")
 dir_figs = os.path.join(dir_base, "figs")
 # Set the directories and data sources
 data_src_radar = "rmi"
@@ -56,15 +59,17 @@ r_nwc, metadata = import_netcdf_pysteps(
     os.path.join(dir_nwc, "blended_nowcast_%s.nc" % startdate.strftime("%Y%m%d%H%M"))
 )
 
-# Load the control nowcast
-r_nwc_control, metadata = import_netcdf_pysteps(
-    os.path.join(dir_nwc_control, "blended_nowcast_%s.nc" % startdate.strftime("%Y%m%d%H%M"))
-)
+if control :
+    # Load the control nowcast
+    r_nwc_control, metadata = import_netcdf_pysteps(
+        os.path.join(dir_nwc_control, "blended_nowcast_%s.nc" % startdate.strftime("%Y%m%d%H%M"))
+    )
 
 # The shape of the ensemble nowcast is (n_ens, n_lt, x, y) but the control nowcast and the ensemble nowcast
 # with 1 ensemble member is (n_lt, x, y). Determine the min common lead time of the two nowcasts.
 n_lt = r_nwc.shape[1] if len(r_nwc.shape) == 4 else r_nwc.shape[0]
-n_lt = min(n_lt, r_nwc_control.shape[0])
+if control:
+    n_lt = min(n_lt, r_nwc_control.shape[0])
 
 
 print("Loading and preprocessing radar analysis...")
@@ -230,14 +235,15 @@ def single_member_plot(nowcast, analysisdate,t_step,dir_figs):
     plt.close()
 
 print(" Shape of r_nwc:",    r_nwc.shape)
-print(" Shape of r_nwc_control:",    r_nwc_control.shape)
+if control :
+    print(" Shape of r_nwc_control:",    r_nwc_control.shape)
 print(" Shape of r_radar:", r_radar.shape)
 
-spaghetti_plot(r_nwc, r_nwc_control, startdate, timestep, dir_figs)
+if control :
+    spaghetti_plot(r_nwc, r_nwc_control, startdate, timestep, dir_figs)
+    uncertainty_plot(r_nwc, r_nwc_control,startdate, timestep, dir_figs)
+    density_plot(r_nwc, r_nwc_control, startdate, timestep, dir_figs)
 
-uncertainty_plot(r_nwc, r_nwc_control,startdate, timestep, dir_figs)
-
-density_plot(r_nwc, r_nwc_control, startdate, timestep, dir_figs)
 single_member_plot(r_nwc, startdate, timestep, dir_figs)
 
 # Plot the map of the probability of precipitation exceeding a certain threshold thr at a given leadtime lt.
@@ -444,7 +450,8 @@ plot_maps = True
 if plot_maps:
     plot_nowcast(r_nwc,metadata, 'member', member=0, figdir=dir_figs, startdate=startdate)
     plot_nowcast(r_nwc,metadata, 'mean', figdir=dir_figs, startdate=startdate)
-    plot_nowcast(r_nwc_control,metadata, 'control', figdir=dir_figs, startdate=startdate)
+    if control :
+        plot_nowcast(r_nwc_control,metadata, 'control', figdir=dir_figs, startdate=startdate)
     plot_nowcast(r_radar,metadata,'radar', figdir=dir_figs, startdate=startdate)
 
 # end the program
