@@ -143,27 +143,35 @@ for file in os.listdir(dir_motion):
 startdate_nwp = startdate + datetime.timedelta(minutes=timestep)
 date_nwp = startdate_nwp + max([nwptime - startdate_nwp for nwptime in fcsttimes_nwp if nwptime <= startdate_nwp]) 
 
-model='ao13'
-fn_motion = os.path.join(dir_motion,
-        r'motion_%s_%s.npy' % (model,date_nwp.strftime('%Y%m%d%H%M%S'))
-)
-fn_cascade = os.path.join(dir_cascade,
-        r'cascade_%s_%s.nc' % (model,date_nwp.strftime('%Y%m%d%H%M%S'))
-)
+def load_NWP(model, date_nwp, dir_motion, dir_cascade):
+    """
+    Load the NWP cascade and velocities for the given model and date
+    """
+    fn_motion = os.path.join(dir_motion,
+            r'motion_%s_%s.npy' % (model,date_nwp.strftime('%Y%m%d%H%M%S'))
+    )
+    fn_cascade = os.path.join(dir_cascade,
+            r'cascade_%s_%s.nc' % (model,date_nwp.strftime('%Y%m%d%H%M%S'))
+    )
 
-if not os.path.exists(fn_cascade):
-    raise Exception('Cascade file %s accompanying motion file %s does not exist' % (fn_cascade,fn_motion))
-print(r'Loading NWP cascade and velocities for run started at %s...' % date_nwp.strftime('%Y-%m-%d %H:%M'))
-r_decomposed_nwp, v_nwp = pysteps.blending.utils.load_NWP(
-        input_nc_path_decomp = fn_cascade,
-        input_path_velocities = fn_motion,
-        start_time=np.datetime64(startdate_nwp), 
-        n_timesteps=fc_length
-)
+    if not os.path.exists(fn_cascade):
+        raise Exception('Cascade file %s accompanying motion file %s does not exist' % (fn_cascade,fn_motion))
 
-# 5.bis Make sure the NWP cascade and velocity fields have an extra 'n_models' dimension
-r_decomposed_nwp = np.stack([r_decomposed_nwp])
-v_nwp = np.stack([v_nwp])
+    print(r'Loading NWP cascade and velocities for run started at %s...' % date_nwp.strftime('%Y-%m-%d %H:%M'))
+    r_decomposed_nwp, v_nwp = pysteps.blending.utils.load_NWP(
+            input_nc_path_decomp = fn_cascade,
+            input_path_velocities = fn_motion,
+            start_time=np.datetime64(startdate_nwp),
+            n_timesteps=fc_length
+    )
+
+    return r_decomposed_nwp, v_nwp
+
+models = ['ar13', 'ao13']
+r_decomposed_nwp, v_nwp = zip(*(load_NWP(model, date_nwp, dir_motion, dir_cascade) for model in models))
+r_decomposed_nwp = np.stack(r_decomposed_nwp, axis=0)
+v_nwp = np.stack(v_nwp, axis=0)
+
 print('done!')
 
 
@@ -184,7 +192,6 @@ exporter = pysteps.io.initialize_forecast_exporter_netcdf(
         metadata = metadata_nwc,
         incremental = 'timestep'
 )
-
 
 # Start the nowcast
 
