@@ -251,7 +251,7 @@ def plot_exceedance_probability(nowcast,thr,lt,analysisdate,dir_figs):
     plt.figure(figsize=(8,6))
     # Plot the exceedance probability map
     plt.imshow(np.sum(nowcast[:, lt, :, :] > thr, axis=0) / nowcast.shape[0],
-                yorigin="upper", cmap="jet", vmin=0, vmax=1)
+                origin="upper", cmap="jet", vmin=0, vmax=1)
     plt.colorbar()
     plt.title("Probability of exceeding %g mm/h at lead time %i min\n" % (thr, lt))
     plt.tight_layout()
@@ -259,13 +259,7 @@ def plot_exceedance_probability(nowcast,thr,lt,analysisdate,dir_figs):
     plt.savefig(os.path.join(dir_figs, fig_fn), dpi=72)
     print("Saved exceedance probability plot as %s" % fig_fn)
     plt.close()
-
-#  plot the exceedance probability maps for a few lead times and thresholds.
-#for lt in [0, 1, 2, 3, 4]:
-#    for thr in [0.1, 0.5, 1, 2, 5]:
-#        plot_exceedance_probability(r_nwc,thr,lt,startdate,dir_figs)
-
-
+    
 # Plot the forecasts on a map.
 def plot_nowcast(nowcast,metadata,product,member=None,pthr=None,figdir='./',startdate=None,geometries=None,dpi=72,height=1085,width=1029):
     '''
@@ -295,9 +289,9 @@ def plot_nowcast(nowcast,metadata,product,member=None,pthr=None,figdir='./',star
     # create list to save filenames
     filenames = []
     # set fixed titles
-    if product == 'prob': #NYI
+    if product == 'prob':
         producttitle = 'Probability of precipitation rate > %.1f mm/h' % (pthr,)
-        data = excprob(nowcast,pthr)
+        data = np.sum(nowcast > pthr, axis=0) / nowcast.shape[0]
         figdir = os.path.join(figdir,'steps_pr%s' % "".join(str(pthr).split('.')))
         filebase = 'steps_pr%s_ac%02dA0' % (
             "".join(str(pthr).split('.')),
@@ -453,6 +447,8 @@ if plot_maps:
     if control :
         plot_nowcast(r_nwc_control,metadata, 'control', figdir=dir_figs, startdate=startdate)
     plot_nowcast(r_radar,metadata,'radar', figdir=dir_figs, startdate=startdate)
+    plot_nowcast(r_nwc,metadata, 'prob', pthr=0.1, figdir=dir_figs, startdate=startdate)
+    plot_nowcast(r_nwc, metadata, 'prob', pthr=5.0, figdir=dir_figs, startdate=startdate)
 
 # end the program
 sys.exit(0)
