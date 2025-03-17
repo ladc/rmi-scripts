@@ -89,7 +89,7 @@
 			}
         },
 	"rmi": {
-            "root_path": "/mnt/HDS_RADQPE2/RADQPE2/archive/",
+            "root_path": "data/radar",
             "path_fmt": "%Y/%m/%d/best/comp/rate/qpe_edk/hdf",
             "fn_pattern": "%Y%m%d%H%M00.rad.best.comp.rate.qpe_edk",
             "fn_ext": "hdf",

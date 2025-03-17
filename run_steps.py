@@ -48,7 +48,7 @@ ncascade = 6
 
 # Directories
 dir_base = "data" # change me - this is the dir that contains the hackathon_testdata directory and where the output will be written
-dir_cascade = os.path.join(dir_base,'pysteps_cases/')#,startdate.strftime('%Y%m%d'))
+dir_cascade = os.path.join(dir_base,'nwp')#,startdate.strftime('%Y%m%d'))
 dir_motion = dir_cascade
 dir_skill = os.path.join(dir_base,'skill')
 dir_gif = os.path.join(dir_base,'gifs')
