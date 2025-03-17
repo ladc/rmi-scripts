@@ -35,7 +35,6 @@ import dask
 import pysteps
 
 # 1. Load the command line arguments
-
 startdate = datetime.datetime.strptime(arg_list[1],"%Y%m%d%H%M")
 fc_length = int(arg_list[2])
 nens = int(arg_list[3])
@@ -48,8 +47,8 @@ threshold = 0.1
 ncascade = 6
 
 # Directories
-dir_base = ".." # change me - this is the dir that contains the hackathon_testdata directory and where the output will be written
-dir_cascade = os.path.join(dir_base,f'hackathon_testdata/nwp/',startdate.strftime('%Y%m%d'))
+dir_base = "data" # change me - this is the dir that contains the hackathon_testdata directory and where the output will be written
+dir_cascade = os.path.join(dir_base,'pysteps_cases/')#,startdate.strftime('%Y%m%d'))
 dir_motion = dir_cascade
 dir_skill = os.path.join(dir_base,'skill')
 dir_gif = os.path.join(dir_base,'gifs')
@@ -61,11 +60,11 @@ os.makedirs(dir_gif,exist_ok=True)
 
 # Hard-coding some paths here to avoid potential pystepsrc issues.
 data_src_radar = "rmi"
-root_path = os.path.join(dir_base,'hackathon_testdata/radar') # pysteps.rcparams.data_sources[data_src_radar]["root_path"]
-path_fmt = f'%Y%m%d' #pysteps.rcparams.data_sources[data_src_radar]["path_fmt"]
+root_path = pysteps.rcparams.data_sources[data_src_radar]["root_path"]
+path_fmt = pysteps.rcparams.data_sources[data_src_radar]["path_fmt"]
 # BEWARE! This is not fixed in time. More recent radqpe files may have a different filename pattern.
-fn_pattern = '%Y%m%d%H%M%S.rad.best.comp.rate.qpe' #pysteps.rcparams.data_sources[data_src_radar]["fn_pattern"]
-fn_ext = 'hdf' #pysteps.rcparams.data_sources[data_src_radar]["fn_ext"]
+fn_pattern = pysteps.rcparams.data_sources[data_src_radar]["fn_pattern"]
+fn_ext = pysteps.rcparams.data_sources[data_src_radar]["fn_ext"]
 importer_name = pysteps.rcparams.data_sources[data_src_radar]["importer"]
 importer_kwargs = pysteps.rcparams.data_sources[data_src_radar]["importer_kwargs"]
 timestep = pysteps.rcparams.data_sources[data_src_radar]["timestep"]
@@ -85,9 +84,6 @@ print('')
 
 
 # Load and preprocess the radar data
-
-# In[15]:
-
 
 print('Loading and preprocessing radar analysis...')
 fn_radar = pysteps.io.find_by_date(
@@ -230,7 +226,7 @@ r_nwc = nwc_method(
         noise_kwargs = None,
         vel_pert_kwargs = None,
         clim_kwargs = None,
-        mask_kwargs = None,
+        mask_kwargs = {"max_mask_rim" : 40 },
         measure_time = False
 )
 
