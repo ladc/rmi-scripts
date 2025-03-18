@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -S /bin/bash
 #PBS -l walltime=0:59:00
-#PBS -l select=1:ncpus=4:ompthreads=4:mem=12GB
+#PBS -l select=1:ncpus=4:ompthreads=4:mem=24GB
 #PBS -j oe
 #PBS -o /home/ledecruz/projects/rmi-scripts/data/log/steps.log
 #PBS -e /home/ledecruz/projects/rmi-scripts/data/log/steps.err
