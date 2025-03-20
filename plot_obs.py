@@ -23,20 +23,24 @@ startdate = datetime.datetime.strptime(arg_list[1], "%Y%m%d%H%M")
 nfiles = int(arg_list[2]) if len(arg_list) > 2 else 1
 threshold = 0.1
 
-dir_base = ".."  # change me
+dir_base = "data"
 dir_figs = os.path.join(dir_base, "figs")
 # Set the directories and data sources
 data_src_radar = "rmi"
 
-# Hard-coding some paths here to avoid potential pystepsrc issues.
-root_path = os.path.join(dir_base,'hackathon_testdata/radar') # pysteps.rcparams.data_sources[data_src_radar]["root_path"]
-path_fmt = f'%Y%m%d' #pysteps.rcparams.data_sources[data_src_radar]["path_fmt"]
-# BEWARE! This is not fixed in time. More recent radqpe files may have a different filename pattern.
-fn_pattern = '%Y%m%d%H%M%S.rad.best.comp.rate.qpe' #pysteps.rcparams.data_sources[data_src_radar]["fn_pattern"]
-fn_ext = 'hdf' #pysteps.rcparams.data_sources[data_src_radar]["fn_ext"]
+
+# typically "%Y%m%d%H%M%S.rad.bhbjbwdnfa.comp.rate.qpe2"
+fn_pattern = pysteps.rcparams.data_sources[data_src_radar]["fn_pattern"]
+
+# typically "hdf5"
+fn_ext = pysteps.rcparams.data_sources[data_src_radar]["fn_ext"]
 importer_name = pysteps.rcparams.data_sources[data_src_radar]["importer"]
 importer_kwargs = pysteps.rcparams.data_sources[data_src_radar]["importer_kwargs"]
 timestep = pysteps.rcparams.data_sources[data_src_radar]["timestep"]
+
+# Find the radar data file
+root_path = pysteps.rcparams.data_sources[data_src_radar]["root_path"]
+path_fmt = pysteps.rcparams.data_sources[data_src_radar]["path_fmt"]
 
 
 print("Loading and preprocessing radar analysis...")
