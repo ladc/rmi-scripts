@@ -101,7 +101,8 @@ importer_radar = pysteps.io.get_method(importer_name,"importer")
 r_radar, _, metadata_radar = pysteps.io.read_timeseries(
         inputfns = fn_radar,
         importer = importer_radar,
-        legacy=False
+        legacy=False,
+        **importer_kwargs
 )
 
 metadata_nwc = metadata_radar.copy()
@@ -167,10 +168,15 @@ def load_NWP(model, date_nwp, dir_motion, dir_cascade):
 
     return r_decomposed_nwp, v_nwp
 
-models = ['ar13', 'ao13']
-r_decomposed_nwp, v_nwp = zip(*(load_NWP(model, date_nwp, dir_motion, dir_cascade) for model in models))
-r_decomposed_nwp = np.stack(r_decomposed_nwp, axis=0)
-v_nwp = np.stack(v_nwp, axis=0)
+models = ['ao13','ar13']
+if len(models) == 1:
+  r_decomposed_nwp, v_nwp = load_NWP(models[0], date_nwp, dir_motion, dir_cascade)
+  r_decomposed_nwp = np.stack([r_decomposed_nwp], axis=0)
+  v_nwp = np.stack([v_nwp],axis=0)
+else:
+  r_decomposed_nwp, v_nwp = zip(*(load_NWP(model, date_nwp, dir_motion, dir_cascade) for model in models))
+  r_decomposed_nwp = np.stack(r_decomposed_nwp, axis=0)
+  v_nwp = np.stack(v_nwp, axis=0)
 
 print('done!')
 
