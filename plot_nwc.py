@@ -87,7 +87,7 @@ fn_radar = pysteps.io.find_by_date(
 
 importer_radar = pysteps.io.get_method(importer_name, "importer")
 r_radar, _, metadata_radar = pysteps.io.read_timeseries(
-    inputfns=fn_radar, importer=importer_radar, legacy=False
+    inputfns=fn_radar, importer=importer_radar, legacy=False, **importer_kwargs
 )
 
 coord_x = r_nwc.shape[2] * 2 // 3
