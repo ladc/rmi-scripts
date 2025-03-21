@@ -54,10 +54,9 @@ fn_radar = pysteps.io.find_by_date(
     num_prev_files=0,
     num_next_files=nfiles-1,
 )
-
 importer_radar = pysteps.io.get_method(importer_name, "importer")
 r_radar, _, metadata = pysteps.io.read_timeseries(
-    inputfns=fn_radar, importer=importer_radar, legacy=False
+    inputfns=fn_radar, importer=importer_radar, legacy=False, **importer_kwargs
 )
 print(r_radar.shape)
 print(metadata)
@@ -118,6 +117,7 @@ def plot_radar(radar,metadata,figdir='./',geometries=None,dpi=72,height=1085,wid
     # set timestep for first figure
     timestep=0
     timestamp = metadata['timestamps'][0]
+
     # add the data
     im = ax.imshow(
         np.ma.masked_invalid(radar[timestep,:,:]),

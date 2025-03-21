@@ -96,7 +96,8 @@
             "importer": "odim_hdf5",
             "timestep": 5,
             "importer_kwargs": {
-				"accutime": 5.0
+				"accutime": 5.0,
+				"ignore_gain_offset": true
             }
         },
         "saf": {
