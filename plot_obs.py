@@ -58,8 +58,25 @@ importer_radar = pysteps.io.get_method(importer_name, "importer")
 r_radar, _, metadata = pysteps.io.read_timeseries(
     inputfns=fn_radar, importer=importer_radar, legacy=False, **importer_kwargs
 )
-print(r_radar.shape)
-print(metadata)
+
+print("Radar Data Shape:", r_radar.shape)
+print("Sample Data:", r_radar[0, 345:355, 345:355])  # Print some sample values
+print("Metadata:", metadata)
+print("Any valid data points?", np.any(~np.isnan(r_radar)))
+nonzero_fraction = np.count_nonzero(r_radar) / r_radar.size
+print(f"Fraction of nonzero pixels: {nonzero_fraction:.6f}")
+
+epsilon = 1e-2  # Small threshold to consider as "nonzero"
+valid_pixels = ~np.isnan(r_radar)  # Exclude NaNs
+nonzero_pixels = np.sum(np.abs(r_radar[valid_pixels]) > epsilon)  # Count nonzero pixels
+total_valid_pixels = np.sum(valid_pixels)  # Count total valid (non-NaN) pixels
+
+if total_valid_pixels > 0:
+    nonzero_fraction = nonzero_pixels / total_valid_pixels
+    print(f"Fraction of significant nonzero pixels: {nonzero_fraction:.6f}")
+else:
+    print("No valid pixels found!")
+
 
 # Plot the forecasts on a map.
 def plot_radar(radar,metadata,figdir='./',geometries=None,dpi=72,height=1085,width=1029):
@@ -78,6 +95,7 @@ def plot_radar(radar,metadata,figdir='./',geometries=None,dpi=72,height=1085,wid
     from pysteps.visualization.utils import get_geogrid, get_basemap_axis
     from pysteps.visualization.precipfields import get_colormap
     import os
+
     # set pixel-value
     px = 1./dpi
     # create list to save filenames
@@ -151,7 +169,7 @@ def plot_radar(radar,metadata,figdir='./',geometries=None,dpi=72,height=1085,wid
         fig.savefig(filepath, dpi=dpi)
     filenames.append(filepath)
     # start loop over remaining timesteps, reusing the figure and axis for speedup
-    for timestep in range(1,r_radar.shape[0]):
+    for timestep in range(1,radar.shape[0]):
         im.set_data(np.ma.masked_invalid(radar[timestep,:,:]))
         timestamp = metadata['timestamps'][timestep]
         suptitle = "%s " %  (
