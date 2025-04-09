@@ -190,7 +190,7 @@ def write_netCDF(R):
 exporter = pysteps.io.initialize_forecast_exporter_netcdf(
         outpath = dir_nwc,
         outfnprefix = 'blended_nowcast_%s' % startdate.strftime("%Y%m%d%H%M"),
-        startdate = startdate_nwp,
+        startdate = startdate,
         timestep = timestep,
         n_timesteps = fc_length,
         shape = metadata_nwc['shape'],
