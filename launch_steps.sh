@@ -7,5 +7,5 @@ for timestamp in `./daterange.sh $startdate $enddate $interval`
 do
   echo Launching: qsub -vtimestamp=$timestamp -W depend=afterok:$jobid jobscript_steps.sh 
   jobid=`qsub -vtimestamp=$timestamp -W depend=afterok:$jobid jobscript_steps.sh`
-  qsub -vtimestamp=$timestamp -W depend=afterok:$jobid jobscript_plot.sh
+  qsub -vtimestamp=$timestamp -W depend=afterok:$jobid jobscript_steps.sh
 done
